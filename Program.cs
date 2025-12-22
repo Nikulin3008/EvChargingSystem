@@ -4,6 +4,7 @@ using Npgsql; // Ìîæå çíàäîáèòèñÿ, ÿêùî âèíèêíóòü ï
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // Add services to the container.
@@ -22,6 +23,11 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); // перевір назву свого контексту
+    db.Database.Migrate();
+}
 // Дозволяємо Swagger у будь-якому середовищі (і в Dev, і в Production на Render)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -37,4 +43,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
 
