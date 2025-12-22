@@ -1,47 +1,50 @@
-using EvChargingSystem.API.Data; // Äîäàéòå öåé ðÿäîê
-using Microsoft.EntityFrameworkCore; // Äîäàéòå öåé ðÿäîê
-using Npgsql; // Ìîæå çíàäîáèòèñÿ, ÿêùî âèíèêíóòü ïðîáëåìè
-using Npgsql.EntityFrameworkCore.PostgreSQL;
-
-
+using EvChargingSystem.API.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-// Add services to the container.
 
+// 1. Налаштування контексту БД
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString) // Âèêîðèñòîâóºìî ïðîâàéäåð Npgsql äëÿ PostgreSQL
+    options.UseNpgsql(connectionString)
 );
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// 2. БЕЗПЕЧНЕ ВИКОНАННЯ МІГРАЦІЙ
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); // перевір назву свого контексту
-    db.Database.Migrate();
+    var services = scope.ServiceProvider;
+    try
+    {
+        var db = services.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+        Console.WriteLine("--> Database Migration Successful!");
+    }
+    catch (Exception ex)
+    {
+        // Якщо база не встигла підключитися, сервер просто піде далі, а не вимкнеться
+        Console.WriteLine($"--> Error applying migrations: {ex.Message}");
+    }
 }
-// Дозволяємо Swagger у будь-якому середовищі (і в Dev, і в Production на Render)
+
+// 3. Налаштування Swagger (як головної сторінки)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-    c.RoutePrefix = string.Empty; // Це зробить Swagger головною сторінкою (без /swagger в кінці)
+    c.RoutePrefix = string.Empty; 
 });
 
-//app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
-
-
