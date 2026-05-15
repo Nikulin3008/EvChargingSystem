@@ -165,6 +165,49 @@ namespace EvChargingSystem.API.Controllers
 
             return Ok($"Площадку з ID {siteId} успішно видалено.");
         }
+        // GET: api/stations/managed/{adminId}
+        // Повертає список станцій, які закріплені за конкретним адміном
+        [HttpGet("managed/{adminId}")]
+        [ProducesResponseType(typeof(IEnumerable<StationResponseDto>), 200)]
+        public async Task<IActionResult> GetManagedStations(int adminId)
+        {
+            // 1. Отримуємо тільки ті площадки, де AdministratorId збігається з переданим ID
+            var sites = await _context.Sites
+                .Where(s => s.AdministratorId == adminId)
+                .Include(s => s.ChargingPoints)
+                .Include(s => s.Rates)
+                .ToListAsync();
+
+            if (sites == null || !sites.Any())
+            {
+                // Повертаємо порожній список, якщо станцій немає (це нормально для нового адміна)
+                return Ok(new List<StationResponseDto>());
+            }
+
+            // 2. Маппінг у DTO (такий самий, як у GetNearestStations)
+            var response = sites.Select(s => new StationResponseDto
+            {
+                SiteId = s.SiteId,
+                SiteName = s.SiteName,
+                Latitude = s.Latitude,
+                Longitude = s.Longitude,
+                HasAvailablePorts = s.ChargingPoints.Any(p => p.IsFunctional),
+                CurrentPricePerKwh = s.Rates
+                    .OrderByDescending(r => r.ValidFrom)
+                    .FirstOrDefault()?.PricePerKwh ?? 0.0m,
+                Ports = s.ChargingPoints.Select(p => new PortInfoDto
+                {
+                    PointId = p.PointId,
+                    ConnectorType = p.ConnectorType,
+                    MaxPowerKw = p.MaxPowerKw,
+                    IsFunctional = p.IsFunctional
+                }).ToList()
+            }).ToList();
+
+            return Ok(response);
+        }
+
+
 
         // GET: api/stations/{siteId}
         // Повертає повну інформацію про конкретну площадку та її порти
