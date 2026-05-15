@@ -117,6 +117,27 @@ namespace EvChargingSystem.API.Controllers
             return Ok(history);
         }
 
+        // GET: api/transactions/all (Для статистики в Панелі Адміністратора)
+        [HttpGet("all")]
+        public async Task<ActionResult<IEnumerable<Transaction>>> GetAllTransactions()
+        {
+            // Отримуємо всі транзакції, де є хоч якась оплата або спожита енергія
+            var allTransactions = await _context.Transactions
+                .Include(t => t.ChargingPoint)
+                    .ThenInclude(p => p.Site)
+                .Where(t => t.TotalCost > 0 || t.EnergyKwh > 0)
+                .OrderByDescending(t => t.StartTime)
+                .ToListAsync();
+
+            // Повертаємо пустий масив, якщо транзакцій ще немає (щоб React не видавав червону помилку)
+            if (allTransactions == null || !allTransactions.Any())
+            {
+                return Ok(new List<Transaction>());
+            }
+
+            return Ok(allTransactions);
+        }
+
         [HttpPost("update-telemetry")]
         public async Task<IActionResult> UpdateTelemetry([FromBody] TelemetryDto model)
         {
