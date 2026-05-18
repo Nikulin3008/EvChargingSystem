@@ -64,9 +64,8 @@ namespace EvChargingSystem.API.Controllers
             if (transaction == null) return NotFound("Транзакція не знайдена.");
 
             // 2. Вибір енергії: беремо з бази (від Wokwi), якщо в Swagger залишили 0
-            decimal finalEnergy = (transaction.EnergyKwh > 0 && model.EnergyConsumedKwh == 0)
-                                  ? transaction.EnergyKwh
-                                  : (decimal)model.EnergyConsumedKwh;
+            // 2. БЕРЕМО ЕНЕРГІЮ ТІЛЬКИ З БАЗИ (ТЕ, ЩО НАКРУТИВ WOKWI)
+            decimal finalEnergy = transaction.EnergyKwh;
 
             // 3. Розрахунок вартості (з дефолтним тарифом 15.0)
             var rate = transaction.ChargingPoint.Site.Rates.OrderByDescending(r => r.ValidFrom).FirstOrDefault();
