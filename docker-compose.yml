@@ -14,4 +14,4 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       # Встав сюди СВІЙ рядок підключення до бази (замість цього тексту)
-      - ConnectionStrings__DefaultConnection=Host=dpg-d7p19ssvikkc73ah3n3g-a.frankfurt-postgres.render.com;Port=5432;Database=ev_charging_system_db;Username=ev_charging_system_db_user;Password=VILdnM0nI6Hmwse3Hf4onl8PwtBqhzYg;SSL Mode=Require;Trust Server Certificate=true
+      - ConnectionStrings__DefaultConnection=Host=dpg-d7p19ssvikkc73ah3n3g-a.frankfurt-postgres.render.com;Port=5432;Database=ev_charging_system_db;Username=ev_charging_system_db_user;Password=VILdnM0nI6Hmwse3Hf4onl8PwtBqhzYg;SSL Mode=Require;Trust Server Certificate=true;Keepalive=30;
