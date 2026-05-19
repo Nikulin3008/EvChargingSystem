@@ -1,0 +1,17 @@
+﻿version: '3.8'
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8000:80"  # Тут порт 8000, як ти і хотів
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api
+
+  api:
+    build: .
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Встав сюди СВІЙ рядок підключення до бази (замість цього тексту)
+      - ConnectionStrings__DefaultConnection=Host=dpg-d7pl9ssvikkc73ah3n3g-a;Port=5432;Database=ev_charging_system_db;Username=ev_charging_system_db_user;Password=VILdnM0nI6Hmwse3Hf4onl8PwtBqhzYg;SSL Mode=Require;Trust Server Certificate=true
